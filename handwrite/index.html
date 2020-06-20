@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head> 
+<meta charset="utf-8"> 
+<title>手写字</title> 
+</head>
+<body>
+<input type='file' id='file'/>
+<p>缩小比例: <input type="number" id='scal' value="2"></p>
+<div>
+    <p>rgb分别过滤<input type="checkbox" id='ck_rgb'></p>
+    <span>R: <input type="number" id='var_r' value="60"></span>
+    <span>G: <input type="number" id='var_g' value="60"></span>
+    <span>B: <input type="number" id='var_b' value="60"></span>
+</div>
+<div>
+    <p>rgb总和过滤<input type="checkbox" id='ck_sum' checked></p>
+    <span>R+G+B: <input type="number" id='var_sum' value="180"></span>
+</div>
+<input type="button" id='sign' value="sign">
+<div>
+    <canvas id="myCanvas"></canvas>
+</div>
+<style>
+    input[type="number"] {
+        width: 60px;
+    }
+</style>
+<script>
+var cvs=document.getElementById("myCanvas");
+var ctx=cvs.getContext("2d");
+var file=document.getElementById("file"),
+    scal=document.getElementById("scal"),
+    ck_rgb=document.getElementById("ck_rgb"),
+    ck_sum=document.getElementById("ck_sum"),
+    var_r=document.getElementById("var_r"),
+    var_g=document.getElementById("var_g"),
+    var_b=document.getElementById("var_b"),
+    var_sum=document.getElementById("var_sum"),
+    sign=document.getElementById("sign");
+
+function drawToCanvas(imgData){
+    var img = new Image,
+        _scal = scal.value || 2,
+        _ck_rgb = ck_rgb.checked,
+        _ck_sum = ck_sum.checked,
+        _var_r = var_r.value || 60,
+        _var_g = var_g.value || 60,
+        _var_b = var_b.value || 60,
+        _var_sum = var_sum.value || 180;
+
+    img.src = imgData;
+    img.onload = function(){
+        cvs.width = this.width / _scal;
+        cvs.height = this.height / _scal;
+        ctx.drawImage(img, 0, 0, this.width, this.height, 0, 0, cvs.width, cvs.height);
+        var ImgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+        var data = ImgData.data;
+        for (var i = 0;i < data.length; i += 4) {
+            if(_ck_sum && data[i] + data[i+1] + data[i+2] > _var_sum || _ck_rgb && data[i] > _var_r && data[i+1] > _var_g && data[i+2] > _var_b) {
+                data[i] = data[i+1] = data[i+2] = 255;
+                data[i+3] = 0;
+            }
+        }
+        ctx.putImageData(ImgData, 0, 0);
+    }
+}
+file.onchange = function(e){
+	img = e.target.files[0];
+    var reader = new FileReader();
+    reader.readAsDataURL(img);
+    reader.onload = e => {
+        var imgData = e.target.result;
+        sign.onclick = () => {
+            drawToCanvas(imgData);
+        }
+    }
+};
+</script>
+
+</body>
+</html>
